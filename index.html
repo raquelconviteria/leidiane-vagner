@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leidiane & Vagner - Filtro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { height: 100%; overflow: hidden; background: black; }
+    video, canvas, img.overlay {
+      position: absolute;
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+    }
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      z-index: 10;
+    }
+    button {
+      background: #ffffffcc;
+      border: none;
+      padding: 10px 20px;
+      font-size: 18px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <video id="video" autoplay muted playsinline></video>
+  <img src="moldura.png" class="overlay">
+  <canvas id="canvas" style="display: none;"></canvas>
+  <div class="controls">
+    <button onclick="capturePhoto()">📸 Foto</button>
+    <button onclick="startRecording()">🎥 Vídeo</button>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    let mediaRecorder, chunks = [];
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(stream => {
+        video.srcObject = stream;
+      });
+
+    function capturePhoto() {
+      canvas.style.display = 'block';
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const overlay = document.querySelector('img.overlay');
+      ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
+      const link = document.createElement('a');
+      link.download = 'foto-leidiane-vagner.png';
+      link.href = canvas.toDataURL();
+      link.click();
+      canvas.style.display = 'none';
+    }
+
+    function startRecording() {
+      const stream = video.srcObject;
+      mediaRecorder = new MediaRecorder(stream);
+      chunks = [];
+      mediaRecorder.ondataavailable = e => chunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'video-leidiane-vagner.webm';
+        a.click();
+      };
+      mediaRecorder.start();
+      setTimeout(() => mediaRecorder.stop(), 10000); // 10 segundos
+    }
+  </script>
+</body>
+</html>
